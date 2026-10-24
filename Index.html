@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MGIS130 Academic GPA Calculator & Analytics Tool</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#035480',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* [User Interface Layer Custom Styling & Print Rules] */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            .print-card {
+                border: 1px solid #cbd5e1 !important;
+                box-shadow: none !important;
+            }
+        }
+        .transition-all-custom {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans text-slate-800 antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- Header / Navbar -->
+    <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-md no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-brand-600 p-2 rounded-lg text-white shadow-inner">
+                    <i class="fa-solid fa-graduation-cap text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight leading-none text-white">Academic Performance System</h1>
+                    <p class="text-xs text-slate-400 mt-0.5">MGIS130 • Three-Layer Architecture Demonstration</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="toggleModal('scaleModal')" class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-md transition-all border border-slate-700">
+                    <i class="fa-solid fa-table-list text-brand-500"></i>
+                    <span class="hidden sm:inline">Grade Scale</span>
+                </button>
+                <button onclick="toggleModal('archModal')" class="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-md shadow-sm transition-all">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span class="hidden sm:inline">Architecture Guide</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+        <!-- Banner Explaining 3-Layer Architecture -->
+        <div class="bg-gradient-to-r from-slate-900 via-brand-900 to-slate-900 text-white rounded-xl p-5 shadow-sm border border-slate-800 no-print">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-brand-500/20 text-brand-300 text-xs font-semibold px-2.5 py-0.5 rounded-full border border-brand-500/30">System Architecture</span>
+                        <span class="text-xs text-slate-400">MGIS130 Assignment Option D</span>
+                    </div>
+                    <h2 class="text-xl font-bold tracking-tight">Three-Layer Information System Demonstration</h2>
+                    <p class="text-xs text-slate-300 max-w-3xl leading-relaxed">
+                        This web application cleanly segregates the <strong>Data Layer</strong> (localStorage & state), <strong>Processing Layer</strong> (weighted GPA formulas & standing logic), and <strong>User Interface Layer</strong> (DOM views & responsive styling).
+                    </p>
+                </div>
+                <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                    <button onclick="toggleModal('archModal')" class="text-xs bg-white/10 hover:bg-white/20 text-white font-medium px-3 py-2 rounded-lg border border-white/10 transition">
+                        View Architecture Diagram
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Global Alert Message Box (No alerts used) -->
+        <div id="toastNotification" class="hidden fixed bottom-5 right-5 z-50 max-w-md bg-slate-900 text-white px-4 py-3 rounded-lg shadow-2xl border border-slate-700 flex items-center justify-between gap-3 transition-all">
+            <div class="flex items-center gap-2">
+                <i id="toastIcon" class="fa-solid fa-circle-info text-brand-500"></i>
+                <span id="toastMessage" class="text-xs font-medium">Notification message</span>
+            </div>
+            <button onclick="hideToast()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- System Summary Stats Grid -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Cumulative GPA Card -->
+            <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200/80 hover:border-slate-300 transition-all print-card">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Cumulative GPA</span>
+                    <span class="p-2 bg-brand-50 text-brand-600 rounded-lg"><i class="fa-solid fa-chart-line text-sm"></i></span>
+                </div>
+                <div class="mt-3 flex items-baseline space-x-2">
+                    <span id="displayGpa" class="text-3xl font-extrabold text-slate-900">0.00</span>
+                    <span class="text-xs text-slate-400">/ 4.00</span>
+                </div>
+                <div class="mt-2 text-xs flex items-center gap-1 font-medium" id="gpaStatusBadge">
+                    <span class="text-slate-400">No courses calculated</span>
+                </div>
+            </div>
+
+            <!-- Total Credits Card -->
+            <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200/80 hover:border-slate-300 transition-all print-card">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Credits</span>
+                    <span class="p-2 bg-emerald-50 text-emerald-600 rounded-lg"><i class="fa-solid fa-book-open text-sm"></i></span>
+                </div>
+                <div class="mt-3">
+                    <span id="displayCredits" class="text-3xl font-extrabold text-slate-900">0</span>
+                    <span class="text-xs text-slate-400"> Credit Hours</span>
+                </div>
+                <p class="mt-2 text-xs text-slate-500">Sum of completed course credits</p>
+            </div>
+
+            <!-- Quality Points Card -->
+            <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200/80 hover:border-slate-300 transition-all print-card">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Quality Points</span>
+                    <span class="p-2 bg-amber-50 text-amber-600 rounded-lg"><i class="fa-solid fa-calculator text-sm"></i></span>
+                </div>
+                <div class="mt-3">
+                    <span id="displayPoints" class="text-3xl font-extrabold text-slate-900">0.0</span>
+                    <span class="text-xs text-slate-400"> Points</span>
+                </div>
+                <p class="mt-2 text-xs text-slate-500">Credit Hours &times; Grade Points</p>
+            </div>
+
+            <!-- Academic Standing Card -->
+            <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200/80 hover:border-slate-300 transition-all print-card">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">Academic Standing</span>
+                    <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg"><i class="fa-solid fa-award text-sm"></i></span>
+                </div>
+                <div class="mt-3">
+                    <span id="displayStanding" class="text-lg font-bold text-slate-800">Pending Input</span>
+                </div>
+                <p id="standingDescription" class="mt-1 text-xs text-slate-500 leading-tight">Add courses to calculate status.</p>
+            </div>
+        </section>
+
+        <!-- Main Course Table & Management Panel -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Course Table (2 Columns wide on Desktop) -->
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden flex flex-col print-card">
+                <div class="px-5 py-4 bg-slate-50/80 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 no-print">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Course Data Register</h3>
+                        <p class="text-xs text-slate-500">Manage individual course entries and credit allocations.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="loadSampleData()" class="px-3 py-1.5 text-xs font-semibold text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-lg transition-all border border-brand-200/60">
+                            <i class="fa-solid fa-folder-open mr-1"></i> Sample Data
+                        </button>
+                        <button onclick="clearAllCourses()" class="px-3 py-1.5 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition-all border border-rose-200/60">
+                            <i class="fa-solid fa-trash-can mr-1"></i> Clear All
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table Content -->
+                <div class="overflow-x-auto flex-1">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100/70 border-b border-slate-200 text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+                                <th class="py-3 px-4">Course Name</th>
+                                <th class="py-3 px-3 w-28">Credits</th>
+                                <th class="py-3 px-3 w-36">Grade</th>
+                                <th class="py-3 px-3 w-28 text-right">Points</th>
+                                <th class="py-3 px-3 w-16 text-center no-print">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="courseTableBody" class="divide-y divide-slate-100 text-xs">
+                            <!-- Rows injected dynamically via Javascript UI Layer -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Table Footer Actions -->
+                <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between no-print">
+                    <button onclick="addCourseRow()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-plus text-xs"></i> Add Course Row
+                    </button>
+                    <span class="text-xs text-slate-500" id="rowCountDisplay">0 courses listed</span>
+                </div>
+            </div>
+
+            <!-- Target GPA Planner & Reports Side Panel -->
+            <div class="space-y-6">
+                <!-- Target GPA Calculator (Business Logic Demonstration) -->
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200/80 no-print">
+                    <div class="flex items-center space-x-2 border-b border-slate-100 pb-3 mb-4">
+                        <div class="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                            <i class="fa-solid fa-bullseye"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800">Target GPA Planning Logic</h3>
+                            <p class="text-xs text-slate-500">Calculate required performance for future credits</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Target Cumulative GPA</label>
+                            <input type="number" id="targetGpaInput" step="0.01" min="0" max="4.0" value="3.50" oninput="calculateTargetGPA()"
+                                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Upcoming Additional Credits</label>
+                            <input type="number" id="futureCreditsInput" step="1" min="1" max="60" value="15" oninput="calculateTargetGPA()"
+                                class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                        </div>
+
+                        <!-- Target Calculation Result Box -->
+                        <div id="targetResultBox" class="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs space-y-1">
+                            <p class="font-semibold text-slate-700">Required Future Average:</p>
+                            <p id="targetGpaMessage" class="text-xs text-slate-600">Enter current courses to process recommendations.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export & Print Actions Card -->
+                <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200/80 no-print">
+                    <h3 class="text-sm font-bold text-slate-800 mb-1">Export & Documentation</h3>
+                    <p class="text-xs text-slate-500 mb-4">Generate physical or digital reports of your calculation.</p>
+                    <div class="space-y-2">
+                        <button onclick="window.print()" class="w-full px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-lg text-xs border border-slate-300 shadow-sm transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-print"></i> Print Official Report
+                        </button>
+                        <button onclick="exportJSON()" class="w-full px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-lg text-xs border border-slate-300 shadow-sm transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-download"></i> Export JSON Data Backup
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Modal: Architecture Diagram & Technical Breakdown -->
+    <div id="archModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden border border-slate-100 my-8">
+            <div class="bg-slate-900 text-white p-5 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <i class="fa-solid fa-layer-group text-brand-400 text-lg"></i>
+                    <h3 class="font-bold text-base">3-Layer Information System Architecture</h3>
+                </div>
+                <button onclick="toggleModal('archModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="p-6 space-y-6 text-xs text-slate-600 overflow-y-auto max-h-[75vh]">
+                
+                <!-- Visual Diagram Flow -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-center">
+                    <div class="p-4 bg-brand-50 border border-brand-200 rounded-xl">
+                        <div class="w-8 h-8 mx-auto bg-brand-600 text-white rounded-full flex items-center justify-center font-bold mb-2">1</div>
+                        <h4 class="font-bold text-brand-900 mb-1">Data Layer</h4>
+                        <p class="text-[11px] text-brand-700">Storage & Input</p>
+                        <p class="text-[10px] text-slate-500 mt-2">Course Array State, LocalStorage API, Grade Scale Point Dictionary (4.0 scale)</p>
+                    </div>
+                    <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
+                        <div class="w-8 h-8 mx-auto bg-emerald-600 text-white rounded-full flex items-center justify-center font-bold mb-2">2</div>
+                        <h4 class="font-bold text-emerald-900 mb-1">Processing Layer</h4>
+                        <p class="text-[11px] text-emerald-700">Business Logic</p>
+                        <p class="text-[10px] text-slate-500 mt-2">Weighted Cumulative Formula, Academic Standing Evaluation, Target GPA Predictions</p>
+                    </div>
+                    <div class="p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                        <div class="w-8 h-8 mx-auto bg-purple-600 text-white rounded-full flex items-center justify-center font-bold mb-2">3</div>
+                        <h4 class="font-bold text-purple-900 mb-1">UI Layer</h4>
+                        <p class="text-[11px] text-purple-700">Presentation</p>
+                        <p class="text-[10px] text-slate-500 mt-2">Tailwind CSS Grid, Reactive DOM Table Updates, Modals & Toast Notifications</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3 border-t border-slate-200 pt-4">
+                    <h4 class="font-bold text-slate-800 text-sm">Implementation Summary for MGIS130 Documentation:</h4>
+                    <ul class="list-disc pl-5 space-y-2 leading-relaxed">
+                        <li><strong>Data Layer:</strong> Persistent state stored under key <code class="bg-slate-100 text-slate-800 px-1 rounded">mgis130_gpa_courses</code>. Supports full reload retrieval and JSON backups.</li>
+                        <li><strong>Processing Layer:</strong> Computes <code class="bg-slate-100 text-slate-800 px-1 rounded">&Sigma;(Credits &times; Grade Points) / &Sigma;Credits</code>. Handles edge cases like zero total credits to avoid <code class="bg-slate-100 text-slate-800 px-1 rounded">NaN</code>.</li>
+                        <li><strong>User Interface Layer:</strong> Developed using semantic HTML5 and dynamic Tailwind CSS classes with absolute mobile responsiveness.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="bg-slate-50 p-4 border-t border-slate-200 text-right">
+                <button onclick="toggleModal('archModal')" class="px-4 py-2 bg-slate-800 text-white font-semibold rounded-lg text-xs">Close Guide</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Standard Grade Scale Reference -->
+    <div id="scaleModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-100 my-8">
+            <div class="bg-slate-900 text-white p-4 flex items-center justify-between">
+                <h3 class="font-bold text-sm flex items-center gap-2"><i class="fa-solid fa-table-list text-brand-400"></i> Standard 4.0 Grade Scale</h3>
+                <button onclick="toggleModal('scaleModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-4">
+                <table class="w-full text-xs text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-200 bg-slate-50 font-bold text-slate-600">
+                            <th class="p-2">Letter Grade</th>
+                            <th class="p-2">Grade Points</th>
+                            <th class="p-2">Percentage Equivalent</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr><td class="p-2 font-bold text-slate-800">A</td><td class="p-2">4.00</td><td class="p-2 text-slate-500">93% - 100%</td></tr>
+                        <tr><td class="p-2 font-bold text-slate-800">A-</td><td class="p-2">3.70</td><td class="p-2 text-slate-500">90% - 92%</td></tr>
+                        <tr><td class="p-2 font-bold text-slate-800">B+</td><td class="p-2">3.30</td><td class="p-2 text-slate-500">87% - 89%</td></tr>
+                        <tr><td class="p-2 font-bold text-slate-800">B</td><td class="p-2">3.00</td><td class="p-2 text-slate-500">83% - 86%</td></tr>
+                        <tr><td class="p-2 font-bold text-slate-800">B-</td><td class="p-2">2.70</td><td class="p-2 text-slate-500">80% - 82%</td></tr>
+                        <tr><td class="p-2 font-bold text-slate-800">C+</td><td class="p-2">2.30</td><td class="p-2 text-slate-500">77% - 79%</td></tr>
+                        <tr><td class="p-2 font-bold text-slate-800">C</td><td class="p-2">2.00</td><td class="p-2 text-slate-500">73% - 76%</td></tr>
+                        <tr><td class="p-2 font-bold text-slate-800">C-</td><td class="p-2">1.70</td><td class="p-2 text-slate-500">70% - 72%</td></tr>
+                        <tr><td class="p-2 font-bold text-slate-800">D+</td><td class="p-2">1.30</td><td class="p-2 text-slate-500">67% - 69%</td></tr>
+                        <tr><td class="p-2 font-bold text-slate-800">D</td><td class="p-2">1.00</td><td class="p-2 text-slate-500">60% - 66%</td></tr>
+                        <tr><td class="p-2 font-bold text-slate-800">F</td><td class="p-2">0.00</td><td class="p-2 text-slate-500">Below 60%</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="bg-slate-50 p-3 border-t border-slate-200 text-right">
+                <button onclick="toggleModal('scaleModal')" class="px-4 py-1.5 bg-slate-800 text-white font-semibold rounded-lg text-xs">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        //=======================================================================
+        // [DATA LAYER] Information Storage, State Management, and Mappings
+        //=======================================================================
+        
+        // Standard 4.0 Grade Point Dictionary
+        const GRADE_SCALE = {
+            'A': 4.00,
+            'A-': 3.70,
+            'B+': 3.30,
+            'B': 3.00,
+            'B-': 2.70,
+            'C+': 2.30,
+            'C': 2.00,
+            'C-': 1.70,
+            'D+': 1.30,
+            'D': 1.00,
+            'F': 0.00
+        };
+
+        // Application State Array (Holds course object data)
+        let courses = [];
+
+        // Sample Data Set for quick testing
+        const SAMPLE_COURSES = [
+            { id: '1', name: 'MGIS 130 - Info Systems Architecture', credits: 3, grade: 'A' },
+            { id: '2', name: 'ACCT 210 - Financial Accounting', credits: 4, grade: 'B+' },
+            { id: '3', name: 'CSCI 141 - Computer Science I', credits: 4, grade: 'A-' },
+            { id: '4', name: 'STAT 145 - Business Statistics', credits: 3, grade: 'B' },
+            { id: '5', name: 'YOST 100 - First Year Seminar', credits: 1, grade: 'A' }
+        ];
+
+        // Storage Key
+        const LOCAL_STORAGE_KEY = 'mgis130_gpa_courses_v1';
+
+        // [Data Layer] Save current state to browser local storage
+        function saveCoursesToStorage() {
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(courses));
+            } catch (error) {
+                console.error("Data Layer Error: Failed to save to localStorage", error);
+            }
+        }
+
+        // [Data Layer] Load state from local storage on init
+        function loadCoursesFromStorage() {
+            try {
+                const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if (stored) {
+                    courses = JSON.parse(stored);
+                } else {
+                    courses = [...SAMPLE_COURSES]; // Fallback to sample data on first launch
+                }
+            } catch (error) {
+                console.error("Data Layer Error: Parsing stored json failed", error);
+                courses = [...SAMPLE_COURSES];
+            }
+        }
+
+
+        //=======================================================================
+        // [PROCESSING LAYER] Calculations, Formulations, & Business Logic
+        //=======================================================================
+
+        /**
+         * Core Business Logic: Computes Total Credits, Quality Points, & Cumulative GPA
+         * Formula: GPA = Total Quality Points / Total Credits
+         */
+        function calculateGPA() {
+            let totalCredits = 0;
+            let totalQualityPoints = 0;
+
+            courses.forEach(course => {
+                const credits = parseFloat(course.credits) || 0;
+                const gradePoints = GRADE_SCALE[course.grade] !== undefined ? GRADE_SCALE[course.grade] : 0.00;
+                
+                if (credits > 0) {
+                    totalCredits += credits;
+                    totalQualityPoints += (credits * gradePoints);
+                }
+            });
+
+            // Handle division by zero edge case
+            const gpa = totalCredits > 0 ? (totalQualityPoints / totalCredits) : 0.00;
+            const academicStanding = evaluateAcademicStanding(gpa, totalCredits);
+
+            return {
+                gpa: gpa.toFixed(2),
+                totalCredits: totalCredits,
+                qualityPoints: totalQualityPoints.toFixed(2),
+                standing: academicStanding.title,
+                standingDesc: academicStanding.desc,
+                badgeColor: academicStanding.badgeColor
+            };
+        }
+
+        /**
+         * Academic Standing Business Rules Logic
+         */
+        function evaluateAcademicStanding(gpa, credits) {
+            if (credits === 0) {
+                return { 
+                    title: 'Pending Input', 
+                    desc: 'Add course entries with valid credit hours.', 
+                    badgeColor: 'text-slate-500 bg-slate-100' 
+                };
+            }
+            if (gpa >= 3.80) {
+                return { 
+                    title: "President's List", 
+                    desc: 'Highest Honors performance level achieved.', 
+                    badgeColor: 'text-emerald-700 bg-emerald-50 border border-emerald-200' 
+                };
+            } else if (gpa >= 3.50) {
+                return { 
+                    title: "Dean's List", 
+                    desc: 'High academic distinction achieved.', 
+                    badgeColor: 'text-brand-700 bg-brand-50 border border-brand-200' 
+                };
+            } else if (gpa >= 2.00) {
+                return { 
+                    title: "Good Standing", 
+                    desc: 'Meeting standard academic criteria.', 
+                    badgeColor: 'text-slate-700 bg-slate-100 border border-slate-200' 
+                };
+            } else {
+                return { 
+                    title: "Academic Warning", 
+                    desc: 'GPA below minimum required threshold (2.00).', 
+                    badgeColor: 'text-rose-700 bg-rose-50 border border-rose-200' 
+                };
+            }
+        }
+
+        /**
+         * Target GPA Calculation Logic (Processing Layer)
+         * Computes required average grade points for upcoming terms
+         */
+        function calculateTargetGPA() {
+            const targetGpaInput = document.getElementById('targetGpaInput');
+            const futureCreditsInput = document.getElementById('futureCreditsInput');
+            const messageBox = document.getElementById('targetGpaMessage');
+
+            if (!targetGpaInput || !futureCreditsInput || !messageBox) return;
+
+            const targetGpa = parseFloat(targetGpaInput.value) || 0;
+            const futureCredits = parseFloat(futureCreditsInput.value) || 0;
+
+            const currentData = calculateGPA();
+            const currentCredits = currentData.totalCredits;
+            const currentPoints = parseFloat(currentData.qualityPoints);
+
+            if (futureCredits <= 0) {
+                messageBox.innerHTML = `<span class="text-slate-500">Please enter a valid number of upcoming credits.</span>`;
+                return;
+            }
+
+            const desiredTotalPoints = targetGpa * (currentCredits + futureCredits);
+            const neededPoints = desiredTotalPoints - currentPoints;
+            const requiredAvg = neededPoints / futureCredits;
+
+            if (requiredAvg > 4.00) {
+                messageBox.innerHTML = `<span class="text-rose-600 font-bold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Mathematically Impossible (${requiredAvg.toFixed(2)} GPA needed)</span>. Consider increasing future credit hours.`;
+            } else if (requiredAvg < 0) {
+                messageBox.innerHTML = `<span class="text-emerald-600 font-bold"><i class="fa-solid fa-circle-check mr-1"></i> Already Achieved!</span> You will stay above ${targetGpa.toFixed(2)} even with 0.0 GPA in future courses.`;
+            } else {
+                messageBox.innerHTML = `You must average a <span class="font-bold text-brand-700 bg-brand-50 px-1.5 py-0.5 rounded border border-brand-200">${requiredAvg.toFixed(2)} GPA</span> across your next ${futureCredits} credits to achieve a total ${targetGpa.toFixed(2)} GPA.`;
+            }
+        }
+
+
+        //=======================================================================
+        // [USER INTERFACE LAYER] Rendering, Event Handlers, & Interactions
+        //=======================================================================
+
+        // Synchronize UI elements with current data state and calculations
+        function renderUI() {
+            const tbody = document.getElementById('courseTableBody');
+            tbody.innerHTML = '';
+
+            if (courses.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="py-8 text-center text-slate-400">
+                            <i class="fa-solid fa-folder-open text-2xl mb-2 block text-slate-300"></i>
+                            No courses registered. Click "Add Course Row" or "Sample Data" to begin.
+                        </td>
+                    </tr>
+                `;
+            } else {
+                courses.forEach((course, index) => {
+                    const points = ((parseFloat(course.credits) || 0) * (GRADE_SCALE[course.grade] || 0)).toFixed(2);
+                    
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-slate-50/80 transition-all';
+                    row.innerHTML = `
+                        <td class="py-2.5 px-4">
+                            <input type="text" value="${escapeHtml(course.name)}" 
+                                onchange="updateCourse('${course.id}', 'name', this.value)"
+                                placeholder="Course Name" 
+                                class="w-full px-2 py-1 border border-slate-200 rounded focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none text-xs text-slate-800">
+                        </td>
+                        <td class="py-2.5 px-3">
+                            <input type="number" min="0" max="12" step="0.5" value="${course.credits}" 
+                                onchange="updateCourse('${course.id}', 'credits', this.value)"
+                                class="w-full px-2 py-1 border border-slate-200 rounded focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none text-xs text-slate-800">
+                        </td>
+                        <td class="py-2.5 px-3">
+                            <select onchange="updateCourse('${course.id}', 'grade', this.value)" 
+                                class="w-full px-2 py-1 border border-slate-200 rounded focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none text-xs bg-white text-slate-800 font-medium">
+                                ${Object.keys(GRADE_SCALE).map(g => `<option value="${g}" ${course.grade === g ? 'selected' : ''}>${g} (${GRADE_SCALE[g].toFixed(1)})</option>`).join('')}
+                            </select>
+                        </td>
+                        <td class="py-2.5 px-3 text-right font-semibold text-slate-700">
+                            ${points}
+                        </td>
+                        <td class="py-2.5 px-3 text-center no-print">
+                            <button onclick="removeCourse('${course.id}')" class="p-1 text-slate-400 hover:text-rose-600 transition" title="Delete Course">
+                                <i class="fa-solid fa-trash-can text-sm"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+
+            // Execute Processing Layer
+            const stats = calculateGPA();
+
+            // Update UI Cards
+            document.getElementById('displayGpa').innerText = stats.gpa;
+            document.getElementById('displayCredits').innerText = stats.totalCredits;
+            document.getElementById('displayPoints').innerText = stats.qualityPoints;
+            document.getElementById('displayStanding').innerText = stats.standing;
+            document.getElementById('standingDescription').innerText = stats.standingDesc;
+            document.getElementById('rowCountDisplay').innerText = `${courses.length} course${courses.length === 1 ? '' : 's'} registered`;
+
+            // Update Status Badge
+            const badge = document.getElementById('gpaStatusBadge');
+            badge.className = `mt-2 text-xs flex items-center gap-1 font-medium px-2 py-1 rounded-md w-fit ${stats.badgeColor}`;
+            badge.innerHTML = `<i class="fa-solid fa-circle-info"></i> <span>Status: ${stats.standing}</span>`;
+
+            // Trigger target calculator update
+            calculateTargetGPA();
+        }
+
+        /* User Action Event Handlers */
+
+        function addCourseRow() {
+            const newCourse = {
+                id: Date.now().toString(),
+                name: `Course ${courses.length + 1}`,
+                credits: 3,
+                grade: 'A'
+            };
+            courses.push(newCourse);
+            saveCoursesToStorage();
+            renderUI();
+            showToast('New course row added.');
+        }
+
+        function updateCourse(id, field, value) {
+            const course = courses.find(c => c.id === id);
+            if (course) {
+                if (field === 'credits') {
+                    course.credits = Math.max(0, parseFloat(value) || 0);
+                } else {
+                    course[field] = value;
+                }
+                saveCoursesToStorage();
+                renderUI();
+            }
+        }
+
+        function removeCourse(id) {
+            courses = courses.filter(c => c.id !== id);
+            saveCoursesToStorage();
+            renderUI();
+            showToast('Course entry removed.', 'info');
+        }
+
+        function clearAllCourses() {
+            if (courses.length === 0) return;
+            courses = [];
+            saveCoursesToStorage();
+            renderUI();
+            showToast('All course records cleared.', 'info');
+        }
+
+        function loadSampleData() {
+            courses = JSON.parse(JSON.stringify(SAMPLE_COURSES));
+            saveCoursesToStorage();
+            renderUI();
+            showToast('Sample dataset loaded successfully.');
+        }
+
+        function exportJSON() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(courses, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "mgis130_gpa_data.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast('JSON backup exported.');
+        }
+
+        // Helper UI Toast Notification
+        function showToast(msg) {
+            const toast = document.getElementById('toastNotification');
+            const toastMsg = document.getElementById('toastMessage');
+            toastMsg.innerText = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                hideToast();
+            }, 3000);
+        }
+
+        function hideToast() {
+            document.getElementById('toastNotification').classList.add('hidden');
+        }
+
+        // Helper Modal Toggle
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.classList.toggle('hidden');
+        }
+
+        // Utility Security Helper
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // Application Initialization Entry Point
+        window.onload = function() {
+            loadCoursesFromStorage();
+            renderUI();
+        };
+    </script>
+</body>
+</html>
